@@ -172,7 +172,7 @@ if 'mtluntan' in os.environ:
     for duo in fen:
         if ':' not in duo:
             continue
-        username, password = pair.split(':', 1)
+        username, password = duo.split(':', 1)
         username = username.strip()
         password = password.strip()
         if username and password:
