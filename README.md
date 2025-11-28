@@ -15,9 +15,9 @@
 - `mtluntan`  账户(必填)，格式(单账号)：user:pass   格式(多账号)：user1:pass1,user2:pass2 
 - `ips`  由于这是国外的网站无法签到所以需要用代理ip，变量ips，输入格式ip:端口，多个代理需要换行输入
 例如:
-127.0.0.1:80
-127.0.0.1:81
-127.0.0.1:82
+- 127.0.0.1:80
+- 127.0.0.1:81
+- 127.0.0.1:82
 
 4. 在 GitHub 仓库的 Settings → Actions → General 设置 Workflow permissions > 选Read and write permissions和Allow GitHub Actions to create and approve pull requests
 
