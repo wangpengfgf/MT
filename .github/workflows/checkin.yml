@@ -31,5 +31,6 @@ jobs:
     - name: Run auto checkin
       env:
         mtluntan: ${{ secrets.mtluntan }}
+        ips: ${{ secrets.ips }}
       run: |
         python main.py
