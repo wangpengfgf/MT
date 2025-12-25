@@ -37,7 +37,7 @@ jobs:
         
     - name: Run auto checkin
       env:
-        mtluntan: ${{ secrets.mtluntan }}
-        ips: ${{ secrets.ips }}
+        ACCOUNTS: ${{ secrets.ACCOUNTS }}
+        IPS: ${{ secrets.IPS }}
       run: |
         python main.py
