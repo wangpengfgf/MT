@@ -5,12 +5,16 @@ import os
 import time
 import random
 
+WX_PUSHER_APP_TOKEN = os.environ.get("WX_PUSHER_APP_TOKEN", "")
+WX_PUSHER_UID = os.environ.get("WX_PUSHER_UID", "")
+
 s = set()
 ip = ""
 total_retry_count = 0
 MAX_RETRY = 3
 Retry = {}
 accounts_list = {}
+s_list = {}
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36',
@@ -94,9 +98,25 @@ def checkIn(user, pwd):
                     print(CDATA(resp.text))
                     if '已签' in resp.text:
                         del accounts_list[user]
+                        s_list[user] = "签到成功";
     except Exception as e:
         print(f"异常{str(e)}")
         Retry[user] = pwd
+        s_list[user] = "签到失败";
+
+def wx_pusher_send_by_webapi(title, msg):
+    if not WX_PUSHER_APP_TOKEN or not WX_PUSHER_UID: return False;
+    webapi = 'http://wxpusher.zjiecode.com/api/send/message'  # 固定网站
+    data = {
+        "appToken": app_token,
+        "content": msg,
+        "summary": title,
+        "contentType": 1,
+        "uids": ["UID_2NeR1kpFYgBstkf1g8F5UQ1QAIN6"],  # 应用列表的ID
+    }
+    result = requests.post(url=webapi, json=data)
+    if result.ok:
+        return result.json()["code"] == 1000;
 
 def loginhash(data):
     pattern = r'loginhash.*?=(.*?)[\'"]>'
@@ -118,7 +138,7 @@ def CDATA(data):
     if match and match.group(1):
         return match.group(1).strip('[]')
     return ''
-        
+
 def start():
     global Retry, total_retry_count
     if Retry and total_retry_count < MAX_RETRY:
@@ -136,6 +156,8 @@ def start():
             if i < total - 1:
                 time.sleep(3)
         start()
+        return;
+    wx_pusher_send_by_webapi("MT论坛签到通知", json.dumps(s_list, indent=4, ensure_ascii=False));
 
 ACCOUNTS = os.environ.get("ACCOUNTS", "")
 IPS = os.environ.get("IPS", "")
