@@ -34,7 +34,4 @@ jobs:
       env:
         ACCOUNTS: ${{ secrets.ACCOUNTS }}
         IPS: ${{ secrets.IPS }}
-        WX_PUSHER_APP_TOKEN: ${{ secrets.WX_PUSHER_APP_TOKEN }}
-        WX_PUSHER_UID: ${{ secrets.WX_PUSHER_UID }}
-      run: |
-        python main.py
+      run: python main.py
