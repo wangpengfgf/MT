@@ -83,6 +83,7 @@ class Preferences:
             try:
                 os.system('git config --local user.name "github-actions[bot]" >/dev/null 2>&1')
                 os.system('git config --local user.email "github-actions[bot]@users.noreply.github.com" >/dev/null 2>&1')
+                os.system('git config pull.rebase true >/dev/null 2>&1')
                 if os.system(f'git add "{db_path}" >/dev/null 2>&1') == 0:
                     os.system('git commit -m "更新数据库文件" >/dev/null 2>&1')
                     os.system('git push --quiet --force-with-lease')
@@ -99,6 +100,7 @@ except Exception as e:
             try:
                 os.system('git config --local user.name "github-actions[bot]" >/dev/null 2>&1')
                 os.system('git config --local user.email "github-actions[bot]@users.noreply.github.com" >/dev/null 2>&1')
+                os.system('git config pull.rebase true >/dev/null 2>&1')
                 if os.system(f'git add "{pathName}" >/dev/null 2>&1') == 0:
                     os.system('git commit -m "删除数据库文件" >/dev/null 2>&1')
                     os.system('git push --quiet --force-with-lease')
