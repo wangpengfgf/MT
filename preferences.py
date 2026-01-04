@@ -125,8 +125,8 @@ class Preferences:
             if os.system(f'git add "{db_path}" >/dev/null 2>&1') == 0:
                 commit_result = os.system('git commit -m "更新" >/dev/null 2>&1')
                 if commit_result == 0:
-                    os.system('git pull --quiet >/dev/null 2>&1')
-                    os.system('git push --quiet >/dev/null 2>&1')
+                    os.system('git pull --quiet')
+                    os.system('git push --quiet')
         except:
             pass
 
