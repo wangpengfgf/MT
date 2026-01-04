@@ -1,3 +1,30 @@
+        run: |
+          git config --local user.name "github-actions" >/dev/null 2>&1
+          git config --local user.email "github-actions@github.com" >/dev/null 2>&1
+          git add README.md >/dev/null 2>&1
+          if ! git diff --cached --quiet; then
+            git commit -m "自动更新最后更新日期" >/dev/null 2>&1
+            git pull --quiet origin main >/dev/null 2>&1
+            git push --quiet origin main >/dev/null 2>&1
+            echo "更新成功"
+          else
+            echo "无更改可提交"
+          fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import os, random, atexit, pytz, base64
 from pathlib import Path
 from sqlitedict import SqliteDict
@@ -117,16 +144,11 @@ class Preferences:
         try:
             os.system('git config --local user.name "github-actions[bot]" >/dev/null 2>&1')
             os.system('git config --local user.email "github-actions[bot]@users.noreply.github.com" >/dev/null 2>&1')
-            pull_result = os.system('git pull --quiet --no-rebase >/dev/null 2>&1')
-            if pull_result != 0:
-                os.system('git stash >/dev/null 2>&1')
-                os.system('git pull --quiet >/dev/null 2>&1')
-                os.system('git stash pop >/dev/null 2>&1')
-            if os.system(f'git add "{db_path}" >/dev/null 2>&1') == 0:
+            if os.system(f'git add {db_path} >/dev/null 2>&1') == 0:
                 commit_result = os.system('git commit -m "更新" >/dev/null 2>&1')
                 if commit_result == 0:
-                    os.system('git pull --quiet')
-                    os.system('git push --quiet')
+                    os.system('git pull --quiet >/dev/null 2>&1')
+                    os.system('git push --quiet >/dev/null 2>&1')
         except:
             pass
 
