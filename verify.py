@@ -107,4 +107,5 @@ print("\n可用IP代理:")
 for proxy, req_time in successful_proxies:
     print(f"{proxy} - {req_time}ms")
     ips.add(proxy)
+nVerify -= ips
 save()
