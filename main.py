@@ -172,3 +172,6 @@ def start():
                 time.sleep(3)
 
 start()
+u = os.environ.get("IPS", "")
+for duo in u.split("\n"):
+    print(duo+"6")
