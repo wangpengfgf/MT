@@ -26,7 +26,9 @@ class Preferences:
     def _init_or_recreate_db(self):
         db_path = self._db_path
         try:
-            self.db = SqliteDict(db_path, autocommit=True)
+            toDB = SqliteDict(db_path, autocommit=True)
+            if toDB:
+                self.db = toDB
         except:
             try:
                 if os.path.exists(db_path):
@@ -35,11 +37,13 @@ class Preferences:
             except:
                 pass
             try:
-                self.db = SqliteDict(db_path, autocommit=True)
+                toDB = SqliteDict(db_path, autocommit=True)
+                if toDB:
+                    self.db = toDB
             except:
                 raise
         key = f"{self.getTimes()}_{random.uniform(0, 100)}"
-        print(key)
+        print("测试push", key)
         self.put("cs", key)
 
     def get(self, key, default=None):
