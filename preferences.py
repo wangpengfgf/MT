@@ -118,7 +118,8 @@ class Preferences:
             os.system(f'git add {db_path} >/dev/null 2>&1')
             if os.system('git diff --cached --quiet') == 0:
                 os.system('git commit -m "更新" >/dev/null 2>&1')
-                os.system('git push --quiet origin main >/dev/null 2>&1')
+                os.system('git pull --quiet --rebase origin main')
+                os.system('git push --quiet --force-with-lease origin main')
         except:
             pass
 
