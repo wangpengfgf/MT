@@ -14,6 +14,9 @@ class Preferences:
                 current_dir = os.path.dirname(os.path.abspath(__file__))
                 db_path = os.path.join(current_dir, "prefs.sqlite")
             else:
+                root, ext = os.path.splitext(db_path)
+                if ext.lower() != '.sqlite':
+                    db_path = root + '.sqlite'
                 if not os.path.isabs(db_path):
                     current_dir = os.path.dirname(os.path.abspath(__file__))
                     db_path = os.path.join(current_dir, db_path)
