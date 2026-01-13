@@ -20,7 +20,7 @@
      //多账号格式:
      user1:pass1,user2:pass2
      ```
-4.在 GitHub 仓库的 Settings → Actions → General 设置允许推送权限  
+4. 在 GitHub 仓库的 Settings → Actions → General 设置允许推送权限
 5. GitHub Actions 初始手动执行检查是否有配置错误，脚本会自动每天执行,可手动执行
 
 ## 操作教程
