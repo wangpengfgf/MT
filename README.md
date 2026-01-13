@@ -24,7 +24,7 @@
 5. GitHub Actions 初始手动执行检查是否有配置错误，脚本会自动每天执行,可手动执行
 
 <div align="center">
-  <sub>可以按照下面教程设置</sub>
+  <sub>**可以按照下面教程设置**</sub>
 </div>
 
 
