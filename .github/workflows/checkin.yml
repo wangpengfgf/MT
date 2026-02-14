@@ -2,7 +2,7 @@ name: mt论坛自动签到
 
 on:
   schedule:
-    - cron: '54 22 * * *'
+    - cron: '54 22,10 * * *'
   workflow_dispatch:
 
 jobs:
