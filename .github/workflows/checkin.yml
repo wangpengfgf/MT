@@ -1,4 +1,4 @@
-name: MT论坛与Webcat自动签到
+name: mt论坛自动签到
 
 on:
   schedule:
@@ -26,8 +26,4 @@ jobs:
     - name: 运行签到
       env:
         ACCOUNTS: ${{ secrets.ACCOUNTS }}
-        WEBCAT_TOKENS: ${{ secrets.WEBCAT_TOKENS }}
-        WEBCAT_SOURCE_ID: ${{ secrets.WEBCAT_SOURCE_ID }}
-        WEBCAT_LOOP_TIMES: ${{ secrets.WEBCAT_LOOP_TIMES }}
-        WEBCAT_INTERVAL: ${{ secrets.WEBCAT_INTERVAL }}
       run: python main.py
