@@ -13,20 +13,6 @@ headers = {
     'Connection': 'keep-alive'
 }
 
-# ====================== Webcat 全局配置区域 ======================
-WEBCAT_SIGN_URL = 'http://source.webcat.top/user/qd'
-WEBCAT_REWARD_URL = 'http://source.webcat.top/source/reward'
-WEBCAT_HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.0.0 Mobile Safari/537.36',
-    'Accept-Encoding': 'gzip, deflate',
-    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    'Origin': 'http://space.webcat.top',
-    'X-Requested-With': 'mark.via',
-    'Referer': 'http://space.webcat.top/',
-    'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-}
-
-
 def validate_ip_port(ip, port):
     try:
         ip_obj = ipaddress.ip_address(ip)
@@ -150,7 +136,7 @@ def checkIn(user, pwd, ip):
     return False
 
 def loginhash(data):
-    pattern = r'loginhash.*?=(.*?)[\'"\]>'
+    pattern = r'loginhash.*?=(.*?)[\'"]>'
     match = re.search(pattern, data, re.IGNORECASE | re.UNICODE)
     if match and match.group(1):
         return match.group(1).strip()
@@ -164,150 +150,44 @@ def formhash(data):
     return ''
 
 def CDATA(data):
-    pattern = r'CDATA.*?(.*?)\]>'
+    pattern = r'CDATA.*?(.*?)]>'
     match = re.search(pattern, data, re.IGNORECASE | re.UNICODE)
     if match and match.group(1):
         return match.group(1).strip('[]')
     return ''
 
-# ====================== Webcat 签到与领取奖励 ======================
-
-def extract_coin_amount(response_text):
-    """
-    尝试从签到返回结果中解析获取的牛币数量。
-    优先尝试 JSON 中的常见字段名，若无法解析则返回 None。
-    """
-    try:
-        data = json.loads(response_text)
-    except json.JSONDecodeError:
-        # 尝试从文本中提取数字（如"获得10牛币"）
-        match = re.search(r'(获得|得到|奖励|签到成功).*?(\d+)', response_text)
-        if match:
-            return int(match.group(2))
-        return None
-
-    # 可能的字段路径（按优先级排序）
-    possible_paths = [
-        ['data', 'reward'],
-        ['data', 'amount'],
-        ['data', 'coin'],
-        ['data', 'coins'],
-        ['data', 'nb'],
-        ['data', 'niubi'],
-        ['data', 'money'],
-        ['data', 'point'],
-        ['data', 'points'],
-        ['data', 'score'],
-        ['reward'],
-        ['amount'],
-        ['coin'],
-        ['coins'],
-        ['nb'],
-        ['niubi'],
-        ['money'],
-        ['point'],
-        ['points'],
-        ['score'],
-    ]
-
-    for path in possible_paths:
-        current = data
-        try:
-            for key in path:
-                current = current[key]
-            if isinstance(current, (int, float)) and current > 0:
-                return int(current)
-            if isinstance(current, str):
-                num_match = re.search(r'\d+', current)
-                if num_match:
-                    return int(num_match.group())
-        except (KeyError, TypeError):
+def start():
+    ACCOUNTS = os.environ.get("ACCOUNTS", "")
+    if not ACCOUNTS:
+        logger.warning('github ACCOUNTS变量未设置')
+        exit(1)
+    for duo in ACCOUNTS.split("\n"):
+        if ':' not in duo:
             continue
-
-    return None
-
-
-def webcat_request(token, url, extra_data=None):
-    """
-    Webcat 公共请求函数，仿照 PHP 中的 doRequest 逻辑
-    """
-    post_data = {'token': token}
-    if extra_data:
-        post_data.update(extra_data)
-
-    try:
-        resp = requests.post(
-            url,
-            data=post_data,
-            headers=WEBCAT_HEADERS,
-            timeout=30,
-            verify=False
-        )
-        return {
-            'http_code': resp.status_code,
-            'response': resp.text,
-            'json_data': None
-        }
-    except requests.RequestException as e:
-        return {
-            'http_code': 0,
-            'response': '',
-            'json_data': None,
-            'error': str(e)
-        }
-
-
-def webcat_sign_and_reward(token, source_id, loop_times, interval):
-    """
-    对单个 token 执行签到，并根据签到结果自动领取相同数量的牛币奖励
-    """
-    for i in range(1, loop_times + 1):
-        logger.info(f"Token {mask_token(token)} 第 {i}/{loop_times} 次签到")
-
-        # 1. 签到请求
-        sign_res = webcat_request(token, WEBCAT_SIGN_URL)
-
-        if sign_res.get('error'):
-            logger.warning(f"签到请求异常: {sign_res['error']}")
-            continue
-
-        logger.info(f"签到 HTTP 状态码: {sign_res['http_code']}")
-        logger.info(f"签到返回: {sign_res['response']}")
-
-        # 2. 解析牛币数量
-        coin_amount = extract_coin_amount(sign_res['response'])
-
-        if coin_amount is None:
-            logger.warning("未能从签到结果中解析牛币数量，默认使用 1")
-            coin_amount = 1
-        else:
-            logger.info(f"签到获得牛币: {coin_amount}")
-
-        # 3. 自动领取奖励（amount = 签到获得的牛币数）
-        reward_res = webcat_request(token, WEBCAT_REWARD_URL, {
-            'sourceId': source_id,
-            'amount': coin_amount
-        })
-
-        if reward_res.get('error'):
-            logger.warning(f"领取奖励请求异常: {reward_res['error']}")
-        else:
-            logger.info(f"领取奖励 HTTP 状态码: {reward_res['http_code']}")
-            logger.info(f"领取奖励返回: {reward_res['response']}")
-
-        if i < loop_times:
-            time.sleep(interval)
-
-
-def mask_token(token):
-    """对 token 进行脱敏显示"""
-    if len(token) <= 8:
-        return token[:2] + '****'
-    return token[:4] + '****' + token[-4:]
-
-
-def start_mt():
-    """原有 MT 论坛签到入口"""
+        username, password = duo.split(':', 1)
+        username = username.strip()
+        password = password.strip()
+        YiQianDao = prefs.get(username, "") == prefs.getTime()
+        if username and password and not YiQianDao:
+            accounts_list[username] = password
+        elif YiQianDao:
+            logger.info(f"{format_username(username)} 今日已签, 跳过签到")
+    if accounts_list:
+        load()
+    if IP_LIST:
+        keys = list(accounts_list.keys())
+        total = len(keys)
+        for i, username in enumerate(keys):
+            for proxy, status in IP_LIST.items():
+                if not status: continue
+                try:
+                    if checkIn(username, accounts_list[username], proxy): break
+                except:
+                    pass
+            if i < total - 1:
+                time.sleep(3)
+start()
+prefs.save()    """原有 MT 论坛签到入口"""
     ACCOUNTS = os.environ.get("ACCOUNTS", "")
     if not ACCOUNTS:
         logger.warning('github ACCOUNTS变量未设置，跳过MT论坛签到')
