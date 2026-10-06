@@ -41,6 +41,48 @@ def verify(proxy):
     except:
         return proxy, False, -1
 
+ACW_KEY = "3000176000856006061501533003690027800375"
+ACW_BOX = [0xf, 0x23, 0x1d, 0x18, 0x21, 0x10, 0x1, 0x26, 0xa, 0x9, 0x13, 0x1f, 0x28, 0x1b,
+           0x16, 0x17, 0x19, 0xd, 0x6, 0xb, 0x27, 0x12, 0x14, 0x8, 0xe, 0x15, 0x20, 0x1a,
+           0x2, 0x1e, 0x7, 0x4, 0x11, 0x5, 0x3, 0x1c, 0x22, 0x25, 0xc, 0x24]
+
+def _unsbox(arg1):
+    box = [None] * len(ACW_BOX)
+    for index, char in enumerate(arg1):
+        for position in range(len(ACW_BOX)):
+            if ACW_BOX[position] == index + 1:
+                box[position] = char
+    return ''.join(char for char in box if char)
+
+def acw_sc_v2(arg1):
+    raw = _unsbox(arg1)
+    result = ''
+    for index in range(0, min(len(raw), 40), 2):
+        value = int(raw[index:index + 2], 16) ^ int(ACW_KEY[index:index + 2], 16)
+        result += format(value, '02x')
+    return result
+
+def get(req, url, proxies):
+    # 论坛启用了阿里云人机验证, 首次访问返回 js 挑战页, 需要计算 acw_sc__v2 cookie 后重试
+    resp = req.get(url, proxies=proxies, timeout=20)
+    resp.encoding = resp.apparent_encoding
+    match = re.search(r"var arg1='([0-9A-Fa-f]+)'", resp.text)
+    if match and 'acw_sc__v2' in resp.text:
+        req.cookies.set('acw_sc__v2', acw_sc_v2(match.group(1)), domain='bbs.binmt.cc', path='/')
+        resp = req.get(url, proxies=proxies, timeout=20)
+        resp.encoding = resp.apparent_encoding
+    return resp
+
+def post(req, url, data, proxies):
+    resp = req.post(url, data=data, proxies=proxies, timeout=20)
+    resp.encoding = resp.apparent_encoding
+    match = re.search(r"var arg1='([0-9A-Fa-f]+)'", resp.text)
+    if match and 'acw_sc__v2' in resp.text:
+        req.cookies.set('acw_sc__v2', acw_sc_v2(match.group(1)), domain='bbs.binmt.cc', path='/')
+        resp = req.post(url, data=data, proxies=proxies, timeout=20)
+        resp.encoding = resp.apparent_encoding
+    return resp
+
 def is_phone_number(username):
     pattern = r'^1[3-9]\d{9}$'
     return re.match(pattern, username) is not None
@@ -91,8 +133,7 @@ def checkIn(user, pwd, ip):
     logger.info(f"{format_username(user)} 开始签到")
     try:
         url = 'https://bbs.binmt.cc/member.php?mod=logging&action=login&infloat=yes&handlekey=login&inajax=1&ajaxtarget=fwin_content_login'
-        resp = req.get(url, proxies=proxies, timeout=20)
-        resp.encoding = resp.apparent_encoding
+        resp = get(req, url, proxies)
         if resp.ok:
             content = resp.text
             _loginhash = loginhash(content)
@@ -108,22 +149,18 @@ def checkIn(user, pwd, ip):
                 'answer': '',
                 'agreebbrule': ''
             }
-            resp = req.post(url, data=data, proxies=proxies, timeout=20)
-            resp.encoding = resp.apparent_encoding
+            resp = post(req, url, data, proxies)
             if resp.ok:
                 if '失败' in resp.text:
                     del accounts_list[user]
                     logger.warning("密码错误")
                     return
                 url = 'https://bbs.binmt.cc/k_misign-sign.html'
-                resp = req.get(url, proxies=proxies, timeout=20)
-                resp.encoding = resp.apparent_encoding
+                resp = get(req, url, proxies)
                 _formhash = formhash(resp.text)
-                code = resp.status_code
                 if resp.ok:
                     url = f'https://bbs.binmt.cc/plugin.php?id=k_misign:sign&operation=qiandao&format=text&formhash={_formhash}'
-                    resp = req.get(url, proxies=proxies, timeout=20)
-                    resp.encoding = resp.apparent_encoding
+                    resp = get(req, url, proxies)
                     if '已签' in resp.text:
                         del accounts_list[user]
                         logger.info(CDATA(resp.text))
