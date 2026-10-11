@@ -2,7 +2,8 @@ name: mt论坛自动签到
 
 on:
   schedule:
-    - cron: '54 22,10 * * *'
+    # 中国时间 00:01 触发(UTC 16:01), 再由下方步骤随机延迟, 使签到落在 00:01~06:00 之间
+    - cron: '1 16 * * *'
   workflow_dispatch:
 
 jobs:
@@ -22,7 +23,15 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        
+
+    - name: 随机延迟
+      if: github.event_name == 'schedule'
+      run: |
+        # 中国时间 00:01~06:00 内随机签到, 最大延迟约 5 小时 50 分(21000 秒), 避免超出 job 运行上限
+        delay=$((RANDOM % 21000))
+        echo "随机延迟 ${delay} 秒($((delay / 60)) 分钟)后开始签到"
+        sleep $delay
+
     - name: 运行签到
       env:
         ACCOUNTS: ${{ secrets.ACCOUNTS }}
